@@ -33,6 +33,8 @@
 ^
   \- One environment (vim + tmux)
 ^
+  \- YOUR environment
+^
 
 2. It looks cool
 
@@ -71,9 +73,6 @@
 ^
 
 3. Learn how to use tmux
-^
-
-4. Use it full-time, every day!
 
 ---
 
@@ -81,18 +80,13 @@
 ^
 
 1. Keep a list of things that bother you (fix one a day)
-^
   \- Ex: search
 ^
 
 2. Keep tools handy
 ^
   \- Basic commands cheat sheet
-^
   \- List of new commands
-^
-
-3. Balance practice and learning
 
 ---
 
@@ -101,35 +95,12 @@
 
 1. Poor navigation
   \- Don't use the arrow keys (use h, j, k, l)
-^
   \- Don't use the mouse
-^
   \- Don't use excessive h, j, k, l 'ing (jump to where you want to go)
-^
-
-2. Don't use the escape key
-^
-  \- Use C-] (or use a custom mapping)
 
 ---
 
-->  Step 4: Plugins
-^
-
-1. Vundle vs Pathogen
-^
-
-  \- Vundle: easier to user (:PluginInstall 'x', :PluginSearch 'x')
-^
-
-  \- Pathogen: slightly more difficult but more widely supported
-^
-
-  \- Just loading stuff from ~/.vim/bundle
-
----
-
--> What plugins should I use?
+-> Plugins
 ^
 
 1. Start with vanilla vim (add plugins as you need them)
@@ -138,7 +109,8 @@
 2. For starters:
 ^
   \- ctrl-p or command-t (fuzzy file search)
-  \- NERDTree (GUI file structure)
+^
+  \- That's it.
 
 ---
 
