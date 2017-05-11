@@ -51,7 +51,7 @@
 
 ---
 
-# Erlang use in the wild
+# Erlang use in the wild (stolen from SO)
 
 * Amazon uses Erlang to implement SimpleDB, providing database services as a part of the Amazon Elastic Compute Cloud (EC2).
 * Yahoo! uses it in its social bookmarking service, Delicious, which has more than 5 million users and 150 million bookmarked URLs.
@@ -74,7 +74,7 @@
 1. Performance and scaling issues
 2. Multipart systems with pieces that communicate with each other
 3. Continuously running systems or systems with a lot of background processing
-4. Poor app architecture
+4. Poor app architecture*
 
 ---
 
@@ -278,9 +278,9 @@ end
 defmodule TweetFetcher do
   use GenServer
 
-  # Client functions (your public API) 
+  # Client functions (your public API - sending the messages) 
 
-  # Server callbacks (Elixir's process callbacks)
+  # Server callbacks (handling the messages)
 end
 ```
 
@@ -292,12 +292,11 @@ end
 defmodule TweetFetcher do
   use GenServer
 
-  # Client functions (your public API) 
   def fetch_tweets(pid) do
     # Send a "fetch_tweets" message to the server with PID of `pid`
   end
 
-  # Server callbacks (Elixir's process callbacks)
+  # Server callbacks (handling the messages)
 end
 ```
 
@@ -316,14 +315,12 @@ end
 defmodule TweetFetcher do
   use GenServer
 
-  # Client functions (your public API) 
   def fetch_tweets(pid, user_id) 
-    GenServer.call(pid, {:fetch_tweets, user_id})
-    
+    GenServer.call(pid, {:fetch_tweets, user_id})    
     # or GenServer.cast(pid, {:fetch_tweets, user_id})
   end
   
-  # Server callbacks (Elixir's process callbacks)
+  # Server callbacks
 end
 ```
 
@@ -396,6 +393,54 @@ defmodule TweetFetcher do
     {:reply, state, state}
   end
 end
+```
+
+---
+
+# Putting it all together
+
+```
+iex(1)> {:ok, pid} = GenServer.start_link(TweetFetcher, [])
+{:ok, #PID<0.119.0>}
+```
+
+---
+
+# Putting it all together
+
+```
+iex(1)> {:ok, pid} = GenServer.start_link(TweetFetcher, [])
+{:ok, #PID<0.119.0>}
+iex(2)> TweetFetcher.fetch_tweets(pid)
+:ok
+```
+
+---
+
+# Putting it all together
+
+```
+iex(1)> {:ok, pid} = GenServer.start_link(TweetFetcher, [])
+{:ok, #PID<0.119.0>}
+iex(2)> TweetFetcher.fetch_tweets(pid)
+:ok
+iex(3)> TweetFetcher.tweets(pid)
+["new tweet"]
+```
+
+---
+
+# Putting it all together
+
+```
+iex(1)> {:ok, pid} = GenServer.start_link(TweetFetcher, [])
+{:ok, #PID<0.119.0>}
+iex(2)> TweetFetcher.fetch_tweets(pid)
+:ok
+iex(3)> TweetFetcher.tweets(pid)
+["new tweet"]
+iex(4)> TweetFetcher.fetch_tweets(pid)
+:ok
 ```
 
 ---
@@ -521,18 +566,30 @@ This forms "Supervision Trees"
 # Supervisor 
 
 ```
-defmodule OkcrbSupervisor do
-  use Supervisor
+defmodule OkcrbPhoenix do
+  use Application
 
-  def init(:ok) do
+  def start(_type, _args) do
+    import Supervisor.Spec
+
     children = [
-      worker(TweetFetcher, [], restart: :temporary)
+      supervisor(OkcrbPhoenix.Repo, []),
+      supervisor(OkcrbPhoenix.Endpoint, []),
     ]
 
-    supervise(children, strategy: :one_for_one)
+    opts = [strategy: :one_for_one, name: OkcrbPhoenix.Supervisor]
+    Supervisor.start_link(children, opts)
   end
+
+  ...
 end
 ```
+
+---
+
+# (Erlang observer)
+
+## `iex> :observer.start`
 
 ---
 
@@ -556,7 +613,7 @@ end
 
 ---
 
-# "The Most Object-Oriented Language"
+![inline](most_oop.png)
 
 #### http://tech.noredink.com/post/142689001488/the-most-object-oriented-language
 
@@ -587,6 +644,14 @@ Elixir In Action
 https://www.manning.com/books/elixir-in-action
 
 ![inline](elixir_in_action.jpg)
+
+---
+
+# OKC Elixir
+
+## Tuesday, May 30 @ 8:00pm Central
+
+### https://elixir.school/t/may-30-testing/135
 
 ---
 
