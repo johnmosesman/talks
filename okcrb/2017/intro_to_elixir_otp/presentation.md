@@ -51,6 +51,24 @@
 
 ---
 
+# Erlang use in the wild
+
+* Amazon uses Erlang to implement SimpleDB, providing database services as a part of the Amazon Elastic Compute Cloud (EC2).
+* Yahoo! uses it in its social bookmarking service, Delicious, which has more than 5 million users and 150 million bookmarked URLs.
+* Facebook uses Erlang to power the backend of its chat service, handling more than 100 million active users. 
+* WhatsApp uses Erlang to run messaging servers, achieving up to 2 million connected users per server.
+
+---
+
+# Erlang use in the wild (cont'd)
+* T-Mobile uses Erlang in its SMS and authentication systems.
+* Motorola is using Erlang in call processing products in the public-safety industry.
+* Ericsson uses Erlang in its support nodes, used in GPRS and 3G mobile networks worldwide.
+* The CouchDB “schema-less” document-oriented database, providing scalability across multicore and multiserver clusters.
+* RabbitMQ, an AMQP messaging protocol implementation. AMQP is an emerging standard for high-performance enterprise messaging.
+
+---
+
 # What problems?
 
 1. Performance and scaling issues
@@ -399,7 +417,7 @@ iex(5)> TweetFetcher.tweets(pid)
 
 ---
 
-# Let's revisit what we said Elixir was good at.
+# We know how, so what is the result?
 
 ---
 
@@ -541,10 +559,6 @@ end
 # "The Most Object-Oriented Language"
 
 #### http://tech.noredink.com/post/142689001488/the-most-object-oriented-language
-
----
-
-# Conclusion
 
 ---
 
