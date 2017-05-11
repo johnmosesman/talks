@@ -22,7 +22,7 @@
 
 # Side-note: We still love Ruby
 
-![](ruby_and_rails.png)
+![inline](ruby_and_rails.png)
 
 ---
 
@@ -53,8 +53,8 @@
 
 # What problems?
 
-1. Performance and scale 
-2. Multipart systems where pieces need to communicate with each other
+1. Performance and scaling issues
+2. Multipart systems with pieces that communicate with each other
 3. Continuously running systems or systems with a lot of background processing
 4. Poor app architecture
 
@@ -166,6 +166,8 @@ iex> receive do
 
 ```
 $ mix new okcrb
+$ cd okcrb
+$ iex -S mix
 ```
 
 (`mix` is similar to the `rails` or `rake` commands)
@@ -416,6 +418,8 @@ iex(5)> TweetFetcher.tweets(pid)
 [info] Sent 200 in 389µs
 ```
 
+![inline 15%](phoenix.png)
+
 ---
 
 # Performance
@@ -430,17 +434,23 @@ Turns out compiled, concurrent languages are fast.
 
 # Fault tolerance
 
-* Distributed systems come at cost.
-* Distributed systems have increased complexity and therefore more potential for problems
+* Distributed systems come at cost
+* Increased complexity means more potential for problems
 
 ---
 
 # How does Elixir handle errors?
 
 * The Elixir Way: "Let it crash."
-* "Exceptional circumstances should be exceptional."
-* When a process crashes, turn it back on again. ("did you turn it off and on again image")
-* Note: it doesn't save you from yourself.
+* Exceptional circumstances should be exceptional
+
+---
+
+# Let it crash
+
+![inline](on_and_off.jpg)
+
+### Note: doesn't save you from yourself.
 
 ---
 
@@ -455,6 +465,8 @@ Turns out compiled, concurrent languages are fast.
 * If a process crashes, all linked processes crash as well.
 * Links **emit signals between processes**
 
+![inline](link.png)
+
 ---
 
 # Monitors
@@ -463,16 +475,11 @@ Turns out compiled, concurrent languages are fast.
 * A crash in the monitored process doesn't affect the monitoring process
 * Instead of signals Monitors **receive a message in their mailbox.**
 
----
-
-# Supervisors
+![inline](monitor.png)
 
 ---
 
 # Supervisors
-
-* Forms a link to another process (parent-child relationship)
-* Traps exits so they can perform a "supervision strategy"
 
 ---
 
@@ -480,7 +487,16 @@ Turns out compiled, concurrent languages are fast.
 
 * Forms a link to another process (parent-child relationship)
 * Traps exits so they can perform a "supervision strategy"
-* This forms "Supervision Trees"
+
+![inline](supervisor.png)
+
+---
+
+# Supervisors
+
+This forms "Supervision Trees"
+
+![inline](super_supervisors.png)
 
 ---
 
@@ -506,9 +522,9 @@ end
 
 ---
 
-# Typical Rails app
+# "A majestic monolith" - DHH 2016
 
-## show big monolith
+![inline](rails_monolith.png)
 
 ---
 
@@ -518,7 +534,7 @@ end
 
 # Elixir app
 
-# Show image of microservices
+![inline](elixir_app.png)
 
 ---
 
@@ -552,7 +568,11 @@ end
 
 # Resources
 
-* Elixir In Action (book) - https://www.manning.com/books/elixir-in-action
+Elixir In Action
+
+https://www.manning.com/books/elixir-in-action
+
+![inline](elixir_in_action.jpg)
 
 ---
 
