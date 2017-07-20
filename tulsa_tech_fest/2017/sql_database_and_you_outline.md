@@ -20,6 +20,8 @@ You interact with your database all the time, but have you ever wondered how it 
 ## Data storage and querying is not very intuitive
 ### SQL doesn't read like most newer programming languagues do (English), nor do we usually think about data as its individual parts, but as a system that is connected
 
+!! DEclarative?
+
 # What are we covering?
 
 ## Structuring data for a relational database
@@ -137,6 +139,8 @@ These problems are solved by creating a "normalized" structure.
 #### Goal: "reduce data redundancy and improve data integrity"
 
 * 1st Normal Form – The information is stored in a relational table and each column contains atomic values, and there are not repeating groups of columns.
+
+?? atomic values?
 
 ```
 +-------------+------------+-----------+-----------+-----------+-----------+-----------+-----------+
@@ -827,6 +831,229 @@ ORDER BY num_pets DESC
 LIMIT 5
 ```
 
+## TODO - has_many, habtm, polymorphic?
+
 ## Data Integrity
 
-### "When data goes bad"
+<XKCD about bobby tables?>
+
+### "Bad data causes problems"
+
+#### What if a person's age was a sentence?
+#### What if a pet belonged to a person that didn't exist?
+
+### These problems make application development difficult, and can give false reporting data—which can be very hard to catch.
+
+### So how do we ensure data stays correct? => Constraints
+
+
+### Check constraint
+
+```
+ALTER TABLE people ADD CONSTRAINT age CHECK (age > 0 AND age < 120)
+
+---
+
+INSERT INTO people (name, age) VALUES
+('Somebody', -10)
+
+---
+
+ERROR:  new row for relation "people" violates check constraint "age"
+DETAIL:  Failing row contains (8, Somebody, -10).
+
+---
+
+CREATE TABLE people (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR,
+  age INTEGER CHECK (age > 0 AND age < 120)
+);
+
+Or named =>
+
+CREATE TABLE people_3 (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR,
+  age INTEGER CONSTRAINT valid_age CHECK (age > 0 AND age < 120)
+);
+```
+
+### Unique
+
+```
+CREATE TABLE people (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR,
+  age INTEGER,
+  barcode VARCHAR UNIQUE
+);
+```
+
+### NOT NULL
+
+```
+CREATE TABLE people (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR NOT NULL,
+  age INTEGER NOT NULL
+);
+```
+
+> "Tip: In most database designs the majority of columns should be marked not null."
+> -- Postgres docs
+
+### We've already put some constraints in place previously
+
+### PK constraint
+
+```
+CREATE TABLE people (
+  id SERIAL NOT NULL
+);
+
+=>
+
+CREATE TABLE people (
+  id SERIAL PRIMARY KEY
+);
+```
+
+### FK constraint
+
+```
+INSERT INTO pets(person_id, name) VALUES
+(9999, 'Simba')
+
+---
+
+ERROR:  insert or update on table "pets" violates foreign key constraint "pets_person_id_fkey"
+DETAIL:  Key (person_id)=(9999) is not present in table "people".
+
+=> "pets_person_id_fkey" is the default name postgres gave it
+```
+
+#### Foreign key constraint provides "referential integrity"
+
+## Measuring and improving performance
+
+#### How do we increase performance? => Process fewer rows
+
+#### Currently we have to look at every row => "sequential scan" and read from disk
+
+### Enter: The Index
+
+#### What is an index? => Precomputed data structure for targetting specific rows
+
+#### "We're going to be querying on a user's email a lot, so keep a precomputed list of emails and where they live on disk."
+
+### Types of Indexes
+
+#### B-tree, hash, and others
+
+### Let's get computer-sciency
+
+#### Hash table, O(1) lookups, best for small table sizes and equality checks—"Does this value exist"?
+
+#### B-tree or "balanced tree", type of binary search tree, O(log n)
+
+##### "Guess the number game"
+
+#### Actually seen it before—UNIQUE constraint is a b-tree index
+
+#### Ex: With some bigger data
+
+```
+-- ~475k
+CREATE TABLE users (
+  name VARCHAR,
+  email VARCHAR,
+  age INTEGER,
+  created_at timestamp,
+  updated_at timestamp
+)
+
+=> Create copy `users_2`, insert all of users into users_2
+
+CREATE UNIQUE INDEX ON users (email)
+
+=>
+
+unindexed => ~100ms
+indexed => ~1ms
+```
+
+### This may seem unimpressive, but considered the roundtrip response time 100ms is big
+
+### How do we know? =>
+
+#### EXPLAIN
+#### ANALYZE
+
+```
+EXPLAIN ANALYZE VERBOSE SELECT *
+FROM users
+WHERE email = 'buck@rippin.co'
+
+EXPLAIN ANALYZE VERBOSE SELECT *
+FROM users_2
+WHERE email = 'buck@rippin.co'
+```
+
+#### How do I know what to index?
+
+[IMAGE INDEX ALL THE THINGS]
+
+#### Check places like New Relic
+#### pg_stat_statements
+
+[Image of pg_stat_statements]
+
+### N + 1 queries
+
+```
+<% @users = User.all %>
+
+<ul>
+  <% @users.each do |user| %>
+    <% user.pets.each do |pet| %>
+      <li><%= pet.name %></li>
+    <% end %>
+  <% end %>
+</ul>
+
+I, [2017-07-20T14:55:18.075779 #73283]  INFO -- : Started GET "/pages/index" for ::1 at 2017-07-20 14:55:18 -0500
+D, [2017-07-20T14:55:18.364525 #73283] DEBUG -- :    (0.8ms)  SELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC
+I, [2017-07-20T14:55:18.370370 #73283]  INFO -- : Processing by PagesController#index as HTML
+I, [2017-07-20T14:55:18.383009 #73283]  INFO -- :   Rendering pages/index.html.erb within layouts/application
+D, [2017-07-20T14:55:18.392423 #73283] DEBUG -- :   User Load (0.7ms)  SELECT "users".* FROM "users"
+D, [2017-07-20T14:55:18.437505 #73283] DEBUG -- :   Pet Load (0.4ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 1]]
+D, [2017-07-20T14:55:18.447212 #73283] DEBUG -- :   Pet Load (0.5ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 2]]
+D, [2017-07-20T14:55:18.449172 #73283] DEBUG -- :   Pet Load (0.3ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 3]]
+D, [2017-07-20T14:55:18.452683 #73283] DEBUG -- :   Pet Load (0.5ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 4]]
+D, [2017-07-20T14:55:18.454692 #73283] DEBUG -- :   Pet Load (0.4ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 5]]
+D, [2017-07-20T14:55:18.456180 #73283] DEBUG -- :   Pet Load (0.3ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 6]]
+D, [2017-07-20T14:55:18.457397 #73283] DEBUG -- :   Pet Load (0.2ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 7]]
+D, [2017-07-20T14:55:18.459291 #73283] DEBUG -- :   Pet Load (0.3ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 8]]
+D, [2017-07-20T14:55:18.460660 #73283] DEBUG -- :   Pet Load (0.2ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 9]]
+D, [2017-07-20T14:55:18.461829 #73283] DEBUG -- :   Pet Load (0.2ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 10]]
+D, [2017-07-20T14:55:18.463238 #73283] DEBUG -- :   Pet Load (0.2ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 11]]
+D, [2017-07-20T14:55:18.465390 #73283] DEBUG -- :   Pet Load (0.3ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 12]]
+D, [2017-07-20T14:55:18.466832 #73283] DEBUG -- :   Pet Load (0.2ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 13]]
+D, [2017-07-20T14:55:18.468051 #73283] DEBUG -- :   Pet Load (0.2ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 14]]
+I, [2017-07-20T14:55:18.468603 #73283]  INFO -- :   Rendered pages/index.html.erb within layouts/application (85.5ms)
+I, [2017-07-20T14:55:18.660489 #73283]  INFO -- : Completed 200 OK in 290ms (Views: 266.7ms | ActiveRecord: 15.5ms)
+
+---
+
+User.all => <% @users = User.all.includes(:pets) %>
+
+I, [2017-07-20T14:56:12.666672 #73283]  INFO -- : Started GET "/pages/index" for ::1 at 2017-07-20 14:56:12 -0500
+I, [2017-07-20T14:56:12.668105 #73283]  INFO -- : Processing by PagesController#index as HTML
+I, [2017-07-20T14:56:12.672749 #73283]  INFO -- :   Rendering pages/index.html.erb within layouts/application
+D, [2017-07-20T14:56:12.687811 #73283] DEBUG -- :   User Load (0.6ms)  SELECT "users".* FROM "users"
+D, [2017-07-20T14:56:12.694907 #73283] DEBUG -- :   Pet Load (1.2ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)
+I, [2017-07-20T14:56:12.699735 #73283]  INFO -- :   Rendered pages/index.html.erb within layouts/application (26.9ms)
+I, [2017-07-20T14:56:12.711010 #73283]  INFO -- : Completed 200 OK in 43ms (Views: 32.6ms | ActiveRecord: 8.4ms)
+```
+
