@@ -48,8 +48,6 @@
 
 ## Databases
 
-_tables, rows, columns_
-
 ```
 +-------+-----------+------+--------+
 | food  | tastiness | cost | health |
