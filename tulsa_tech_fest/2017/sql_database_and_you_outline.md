@@ -33,6 +33,8 @@ You interact with your database all the time, but have you ever wondered how it 
 
 # Structuring data for a relational database
 
+## Were' making a an app talk about it here
+
 ## How do we represent data?
 ### <Pic various ways to describe a person: bubbles, list, json, drawing>
 ### The database way: tables and rows (and schemas)
@@ -40,30 +42,16 @@ You interact with your database all the time, but have you ever wondered how it 
 
 ## What is "good" structure in a relational database? (*not doc dbs)
 ### Pet store example
-#### People
 
 ```
-+-------------+------------+
-| person_name | person_age |
-+-------------+------------+
-| John        |         26 |
-| Susan       |         22 |
-| Jim         |         30 |
-+-------------+------------+
-```
++-------------+------------+--------------+--------------+----------+----------+----------+
+| person_name | person_age |  work_place  |  work_phone  | pet_name | pet_type | pet_legs |
++-------------+------------+--------------+--------------+----------+----------+----------+
+| John        |         26 | Pizza Palace | 555-555-5555 | Ruby     | Dog      |        4 |
+| Susan       |         22 | Pizza Hut    | 111-111-1111 | Pete     | Bird     |        2 |
+| Jim         |         30 | Pizza Town   | 333-333-3333 | Fluffy   | Cat      |        4 |
++-------------+------------+--------------+--------------+----------+----------+----------+
 
-#### Add in their pets?
-
-Add to person's table?
-
-```
-+-------------+------------+----------+----------+----------+
-| person_name | person_age | pet_name | pet_type | pet_legs |
-+-------------+------------+----------+----------+----------+
-| John        |         26 | Ruby     | Dog      |        4 |
-| Susan       |         22 | Pete     | Bird     |        2 |
-| Jim         |         30 | Fluffy   | Cat      |        4 |
-+-------------+------------+----------+----------+----------+
 ```
 
 #### What happens when John gets another pet?
@@ -71,14 +59,14 @@ Add to person's table?
 Add another row? 
 
 ```
-+-------------+------------+----------+----------+----------+
-| person_name | person_age | pet_name | pet_type | pet_legs |
-+-------------+------------+----------+----------+----------+
-| John        |         26 | Ruby     | Dog      |        4 |
-| Susan       |         22 | Pete     | Bird     |        2 |
-| Jim         |         30 | Fluffy   | Cat      |        4 |
-| John        |         26 | Buddy    | Dog      |        4 |
-+-------------+------------+----------+----------+----------+
++-------------+------------+--------------+--------------+----------+----------+----------+
+| person_name | person_age |  work_place  |  work_phone  | pet_name | pet_type | pet_legs |
++-------------+------------+--------------+--------------+----------+----------+----------+
+| John        |         26 | Pizza Palace | 555-555-5555 | Ruby     | Dog      |        4 |
+| Susan       |         22 | Pizza Hut    | 111-111-1111 | Pete     | Bird     |        2 |
+| Jim         |         30 | Pizza Town   | 333-333-3333 | Fluffy   | Cat      |        4 |
+| John        |         26 | Pizza Palace | 555-555-5555 | Buddy    | Dog      |        4 |
++-------------+------------+--------------+--------------+----------+----------+----------+
 
 Problems? Duplicated data (when John gets older we update multiple places)
 ```
@@ -86,13 +74,14 @@ Problems? Duplicated data (when John gets older we update multiple places)
 Add another pet column?
 
 ```
-+-------------+------------+-----------+-----------+-----------+-----------+-----------+-----------+
-| person_name | person_age | pet1_name | pet1_type | pet1_legs | pet2_name | pet2_type | pet2_legs |
-+-------------+------------+-----------+-----------+-----------+-----------+-----------+-----------+
-| John        |         26 | Ruby      | Dog       |         4 | Buddy     | Dog       |         4 |
-| Susan       |         22 | Pete      | Bird      |         2 |           |           |           |
-| Jim         |         30 | Fluffy    | Cat       |         4 |           |           |           |
-+-------------+------------+-----------+-----------+-----------+-----------+-----------+-----------+
++-------------+------------+--------------+--------------+-----------+-----------+-----------+-----------+-----------+-----------+
+| person_name | person_age |  work_place  |  work_phone  | pet1_name | pet1_type | pet1_legs | pet2_name | pet2_type | pet2_legs |
++-------------+------------+--------------+--------------+-----------+-----------+-----------+-----------+-----------+-----------+
+| John        |         26 | Pizza Palace | 555-555-5555 | Ruby      | Dog       |         4 | Buddy     | Dog       |         4 |
+| Susan       |         22 | Pizza Hut    | 111-111-1111 | Pete      | Bird      |         2 |           |           |           |
+| Jim         |         30 | Pizza Town   | 333-333-3333 | Fluffy    | Cat       |         4 |           |           |           |
++-------------+------------+--------------+--------------+-----------+-----------+-----------+-----------+-----------+-----------+
+
 
 Problems?
     * No more duplicated data, but the number of pets we can have is limited to the number of columns we have.
@@ -100,32 +89,17 @@ Problems?
     * Have to check which fields are available to use 
 ```
 
-#### A pet sadly dies:
-
-```
-+-------------+------------+-----------+-----------+-----------+-----------+-----------+-----------+
-| person_name | person_age | pet1_name | pet1_type | pet1_legs | pet2_name | pet2_type | pet2_legs |
-+-------------+------------+-----------+-----------+-----------+-----------+-----------+-----------+
-| John        |         26 | Ruby      | Dog       | 4         | Buddy     | Dog       |         4 |
-| Susan       |         22 | ???       | ???       | ???       | Paco      | Bird      |         2 |
-| Jim         |         30 | Fluffy    | Cat       | 4         |           |           |           |
-+-------------+------------+-----------+-----------+-----------+-----------+-----------+-----------+
-
-Problems:
-    * Do we move pet_2 fields down into pet_1?
-    * Have to check which pet fields are free to add/remove pets
-```
-
 #### Someone abandons their pet:
 
 ```
-+-------------+------------+----------+----------+----------+
-| person_name | person_age | pet_name | pet_type | pet_legs |
-+-------------+------------+----------+----------+----------+
-| John        | 26         | Ruby     | Dog      |        4 |
-| ???         | ???        | Pete     | Bird     |        2 |
-| Jim         | 30         | Fluffy   | Cat      |        4 |
-+-------------+------------+----------+----------+----------+
++-------------+------------+--------------+--------------+-----------+-----------+-----------+-----------+-----------+-----------+
+| person_name | person_age |  work_place  |  work_phone  | pet1_name | pet1_type | pet1_legs | pet2_name | pet2_type | pet2_legs |
++-------------+------------+--------------+--------------+-----------+-----------+-----------+-----------+-----------+-----------+
+| John        | 26         | Pizza Palace | 555-555-5555 | Ruby      | Dog       |         4 | Buddy     | Dog       |         4 |
+| ???         | ???        | ???          | ???          | Pete      | Bird      |         2 |           |           |           |
+| Jim         | 30         | Pizza Town   | 333-333-3333 | Fluffy    | Cat       |         4 |           |           |           |
++-------------+------------+--------------+--------------+-----------+-----------+-----------+-----------+-----------+-----------+
+
 
 Problems:
     * If we delete the row with Susan we lose all of the pet data
@@ -140,7 +114,7 @@ These problems are solved by creating a "normalized" structure.
 
 * 1st Normal Form – The information is stored in a relational table and each column contains atomic values, and there are not repeating groups of columns.
 
-?? atomic values?
+Atomic - only one piece of data per column
 
 ```
 +-------------+------------+-----------+-----------+-----------+-----------+-----------+-----------+
@@ -155,13 +129,13 @@ These problems are solved by creating a "normalized" structure.
 =>
 
 ```
-+-------------+------------+
-| person_name | person_age |
-+-------------+------------+
-| John        |         26 |
-| Susan       |         22 |
-| Jim         |         30 |
-+-------------+------------+
++-------------+------------+--------------+--------------+
+| person_name | person_age |  work_place  |  work_phone  |
++-------------+------------+--------------+--------------+
+| John        |         26 | Pizza Palace | 555-555-5555 |
+| Susan       |         22 | Pizza Hut    | 111-111-1111 |
+| Jim         |         30 | Pizza Town   | 333-333-3333 |
++-------------+------------+--------------+--------------+
 
 +-------------+----------+----------+----------+
 | person_name | pet_name | pet_type | pet_legs |
@@ -185,18 +159,16 @@ John gets another pet =>
 
 * 2nd Normal Form – The table is in first normal form and all the columns depend on the table’s primary key.
 
-"Everyone has one and only one pet"
-
 ```
-+-------------+------------+----------+----------+----------+
-| person_name | person_age | pet_name | pet_type | pet_legs |
-+-------------+------------+----------+----------+----------+
-| John        | 26         | Ruby     | Dog      |        4 |
-| ???         | ???        | Pete     | Bird     |        2 |
-| Jim         | 30         | Fluffy   | Cat      |        4 |
-+-------------+------------+----------+----------+----------+
++-------------+------------+--------------+--------------+
+| person_name | person_age |  work_place  |  work_phone  |
++-------------+------------+--------------+--------------+
+| John        |         26 | Pizza Palace | 555-555-5555 |
+| Susan       |         22 | Pizza Hut    | 111-111-1111 |
+| Jim         |         30 | Pizza Town   | 333-333-3333 |
++-------------+------------+--------------+--------------+
 
-Type of pet is not related to the person =>
+=> becomes
 
 +-------------+------------+
 | person_name | person_age |
@@ -206,14 +178,14 @@ Type of pet is not related to the person =>
 | Jim         |         30 |
 +-------------+------------+
 
-+-------------+----------+----------+----------+
-| person_name | pet_name | pet_type | pet_legs |
-+-------------+----------+----------+----------+
-| John        | Ruby     | Dog      |        4 |
-| Susan       | Pete     | Bird     |        2 |
-| Jim         | Fluffy   | Cat      |        4 |
-| John        | Buddy    | Dog      |        4 |
-+-------------+----------+----------+----------+
++-------------+--------------+--------------+
+| person_name |  work_place  |  work_phone  |
++-------------+--------------+--------------+
+| John        | Pizza Palace | 555-555-5555 |
+| Susan       | Pizza Hut    | 111-111-1111 |
+| Jim         | Pizza Town   | 333-333-3333 |
++-------------+--------------+--------------+
+
 ```
 
 * 3rd Normal Form – the table is in second normal form and all of its columns are not transitively dependent on the primary key
@@ -233,6 +205,43 @@ Type of pet is not related to the person =>
 +-------------+----------+----------+----------+
 
 Number of legs depends on the pet type =>
+
++-------------+----------+----------+
+| person_name | pet_name | pet_type |
++-------------+----------+----------+
+| John        | Ruby     | Dog      |
+| Susan       | Pete     | Bird     |
+| Jim         | Fluffy   | Cat      |
+| John        | Buddy    | Dog      |
++-------------+----------+----------+
+
++----------+----------+
+| pet_type | pet_legs |
++----------+----------+
+| Dog      |        4 |
+| Bird     |        2 |
+| Cat      |        4 |
++----------+----------+
+```
+
+=> Result - better, but still a problem referencing people's names
+
+```
++-------------+------------+
+| person_name | person_age |
++-------------+------------+
+| John        |         26 |
+| Susan       |         22 |
+| Jim         |         30 |
++-------------+------------+
+
++-------------+--------------+--------------+
+| person_name |  work_place  |  work_phone  |
++-------------+--------------+--------------+
+| John        | Pizza Palace | 555-555-5555 |
+| Susan       | Pizza Hut    | 111-111-1111 |
+| Jim         | Pizza Town   | 333-333-3333 |
++-------------+--------------+--------------+
 
 +-------------+----------+----------+
 | person_name | pet_name | pet_type |
@@ -301,7 +310,7 @@ Using IDs =>
 
 ```
 +------------------+-------------+------------+
-| id (primary key) | person_name | person_age |
+| id (PK)          | person_name | person_age |
 +------------------+-------------+------------+
 |                1 | John        |         26 |
 |                2 | Susan       |         22 |
@@ -309,7 +318,7 @@ Using IDs =>
 +------------------+-------------+------------+
 
 +------------------+-------------------------+----------+----------+
-| id (primary key) | person_id (foreign key) | pet_name | pet_type |
+| id (PK)          | person_id (FK)          | pet_name | pet_type |
 +------------------+-------------------------+----------+----------+
 |               20 |                       1 | Ruby     | Dog      |
 |               21 |                       2 | Pete     | Bird     |
@@ -335,9 +344,10 @@ CREATE TABLE people (
 
 ### Data types
 
-* VARCHAR / TEXT
+* CHAR / VARCHAR / TEXT
 * INTEGER
 * BOOLEAN
+* DATE/DATETIME
 
 ### SELECT
 
@@ -363,6 +373,8 @@ DELETE FROM people
 SELECT *
 FROM people
 WHERE first_name = 'John'
+
+=> result
 
 INSERT INTO persons 
 SELECT 'John', 'Smith', 100
@@ -429,14 +441,14 @@ SELECT COUNT(*) FROM people
 
 // TODO: add extra pet data in here?
 
-+----+-----------+--------+-----+
-| id | person_id |  name  | age |
-+----+-----------+--------+-----+
-| 20 |         1 | Ruby   |   3 |
-| 21 |         2 | Pete   |   5 |
-| 22 |         3 | Fluffy |  12 |
-| 23 |         1 | Buddy  |   1 |
-+----+-----------+--------+-----+
++----+-----------+--------+------+-----+
+| id | person_id |  name  | type | age |
++----+-----------+--------+------+-----+
+| 20 |         1 | Ruby   | Dog  |   3 |
+| 21 |         2 | Pete   | Bird |   5 |
+| 22 |         3 | Fluffy | Cat  |  12 |
+| 23 |         1 | Buddy  | Dog  |   1 |
++----+-----------+--------+------+-----+
 
 CREATE TABLE people (
   id SERIAL PRIMARY KEY,
@@ -448,11 +460,12 @@ CREATE TABLE pets (
   id SERIAL PRIMARY KEY,
   person_id INTEGER REFERENCES people,
   name VARCHAR,
+  type VARCHAR,
   age INTEGER
 )
 ```
 
-### How would we get all of a person's pets?
+###  FR: How would we get all of a person's pets?
 
 ``` 
 SELECT *
@@ -612,17 +625,19 @@ FROM people
 
 ## Types of JOINs
 
-### Seen CROSS JOIN
+### Seen CROSS JOIN - UNION
 
 [IMAGE OF CROSS JOIN]
 
-### Seen "INNER JOIN"
+### Seen "INNER JOIN" - INTERSECTION
 
 Long-hand version of "JOIN"
 
 [IMAGE OF INNER JOIN]
 
 ### OUTER JOIN
+
+[ show images of what's left ]
 
 ### Real quick: NULL
 
@@ -657,9 +672,6 @@ SELECT NULL IS NOT NULL     -- FALSE
 
 ### Back to JOINs
 
-### CROSS JOIN - UNION
-### INNER JOIN - INTERSECTION
-
 ### OUTER JOIN
 
 ### All of Table A, and any that match from Table B
@@ -686,7 +698,7 @@ FROM people
 WHERE pets.id IS NULL
 ```
 
-### Find pets who don't have their shots
+### People with pets that don't have their shots
 
 ```
 CREATE TABLE shot_records (
@@ -711,7 +723,7 @@ WHERE sr.id IS NULL
 => Show results of pets without shots
 ```
 
-### One last example => Find each person and how many pets they have
+### One last example => Feature request: Find each person and how many pets they have
 
 ```
 SELECT AVG(age) FROM people
@@ -756,8 +768,6 @@ FROM people
 GROUP BY people.id, people.name
 
 => More useful results
-
-* Interesting side note—because we're grouping by the primary key, we can use other columns since they're guarenteed unique?
 ```
 
 #### "People with more pets are more likely to get more"
@@ -782,6 +792,9 @@ ORDER BY num_pets DESC
 
 #### "People with 2 or more pets are more likely to adopt more"
 
+### Subquery?
+### Add to the WHERE?
+
 ```
 SELECT people.id, people.name, COUNT(pets.id) AS num_pets
 FROM people
@@ -793,7 +806,7 @@ ORDER BY num_pets DESC
 => Error, why?
 ```
 
-### Order of Operations, cont'd:
+### Order of Operations, again
 
 1. FROM
 2. ON (JOIN)
@@ -802,6 +815,7 @@ ORDER BY num_pets DESC
 5. HAVING
 6. SELECT
 7. ORDER BY
+
 
 ```
 SELECT people.id, people.name, COUNT(pets.id) AS num_pets
@@ -831,7 +845,9 @@ ORDER BY num_pets DESC
 LIMIT 5
 ```
 
-## TODO - has_many, habtm, polymorphic?
+## HABTM
+
+
 
 ## Data Integrity
 
@@ -839,7 +855,7 @@ LIMIT 5
 
 ### "Bad data causes problems"
 
-#### What if a person's age was a sentence?
+#### What if a person's name was a number?
 #### What if a pet belonged to a person that didn't exist?
 
 ### These problems make application development difficult, and can give false reporting data—which can be very hard to catch.
@@ -886,7 +902,7 @@ CREATE TABLE people (
   id SERIAL PRIMARY KEY,
   name VARCHAR,
   age INTEGER,
-  barcode VARCHAR UNIQUE
+  email VARCHAR UNIQUE
 );
 ```
 
@@ -909,7 +925,7 @@ CREATE TABLE people (
 
 ```
 CREATE TABLE people (
-  id SERIAL NOT NULL
+  id SERIAL UNIQUE NOT NULL
 );
 
 =>
@@ -922,6 +938,13 @@ CREATE TABLE people (
 ### FK constraint
 
 ```
+CREATE TABLE pets (
+  id SERIAL PRIMARY KEY,
+  person_id INTEGER REFERENCES people,
+...
+
+---
+
 INSERT INTO pets(person_id, name) VALUES
 (9999, 'Simba')
 
@@ -941,19 +964,17 @@ DETAIL:  Key (person_id)=(9999) is not present in table "people".
 
 #### Currently we have to look at every row => "sequential scan" and read from disk
 
-### Enter: The Index
+### The Index
 
-#### What is an index? => Precomputed data structure for targetting specific rows
+#### What is an index? => Precomputed data structure for efficient targetting of specific rows
 
 #### "We're going to be querying on a user's email a lot, so keep a precomputed list of emails and where they live on disk."
 
-### Types of Indexes
-
-#### B-tree, hash, and others
-
 ### Let's get computer-sciency
 
-#### Hash table, O(1) lookups, best for small table sizes and equality checks—"Does this value exist"?
+### Types of Indexes
+
+#### B-tree, hash table, GiST,  and others
 
 #### B-tree or "balanced tree", type of binary search tree, O(log n)
 
@@ -1000,11 +1021,19 @@ FROM users_2
 WHERE email = 'buck@rippin.co'
 ```
 
-#### How do I know what to index?
+### Note: query planner does what it does
+
+#### query planner keeps stats - pg_stat_statements
+
+### How do I know what to index?
 
 [IMAGE INDEX ALL THE THINGS]
 
+### Indicies take up disk space, and can hurt write-heavy tables
+
 #### Check places like New Relic
+[IMAGE]
+
 #### pg_stat_statements
 
 [Image of pg_stat_statements]
@@ -1056,4 +1085,14 @@ D, [2017-07-20T14:56:12.694907 #73283] DEBUG -- :   Pet Load (1.2ms)  SELECT "pe
 I, [2017-07-20T14:56:12.699735 #73283]  INFO -- :   Rendered pages/index.html.erb within layouts/application (26.9ms)
 I, [2017-07-20T14:56:12.711010 #73283]  INFO -- : Completed 200 OK in 43ms (Views: 32.6ms | ActiveRecord: 8.4ms)
 ```
+
+## Advanced
+
+### JSON columns
+
+
+### SQL Injection
+
+
+### Drag from the bottom up
 
