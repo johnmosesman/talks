@@ -1677,3 +1677,264 @@ DETAIL:  Key (person_id)=(9999) is not present in table "people".
 
 ---
 
+# 5. Performance
+
+---
+
+## How do we increase performance?
+
+- Process fewer things
+- Process things faster
+
+---
+
+## "Sequential Scan"
+
+- Check every row in the table
+
+---
+
+## Indexes
+
+---
+
+## What is an index?
+
+- Pre-computed data structure for efficient targetting of specific rows
+- Keeps track of values and where they exist on disk
+- Different types, but usually a b-tree (balanced tree)
+
+---
+
+## Many Constraints Use Indexes
+
+- UNIQUE
+- PK / FK
+
+---
+
+## Example
+
+```
+CREATE TABLE users (
+  name VARCHAR,
+  email VARCHAR,
+  age INTEGER,
+  created_at timestamp,
+  updated_at timestamp
+)
+
+~475k rows
+
+---
+
+Made a copy - `users_2`
+
+---
+
+CREATE UNIQUE INDEX ON users (email)
+```
+
+---
+
+## Index vs No Index
+
+```
+SELECT *
+FROM users
+WHERE email = 'buck@rippin.co'
+
+---
+
+Un-indexed table (users_2)  - ~100ms
+Indexed table (users)       - ~1ms
+```
+
+---
+
+### Q: How do we know what's actually going on?
+## A: View the Query Plan
+
+---
+
+## Query Planner
+
+- Most modern Database Management Systems (DBMS) have a query planner
+- Query planner analyzes and optimizes queries based on internal stats it collects
+
+---
+
+## EXPLAIN (No Index)
+
+```
+EXPLAIN VERBOSE SELECT *
+FROM users_2
+WHERE email = 'buck@rippin.co'
+
+---
+
++-------------------------------------------------------------------+
+|                            QUERY PLAN                             |
++-------------------------------------------------------------------+
+| Seq Scan on public.users_2  (cost=0.00..11535.80 rows=1 width=63) |
+|   Output: id, name, email, age, created_at, updated_at            |
+|   Filter: ((users_2.email)::text = 'buck@rippin.co'::text)        |
++-------------------------------------------------------------------+
+
+```
+
+---
+
+## EXPLAIN (With Index)
+
+```
+EXPLAIN VERBOSE SELECT *
+FROM users
+WHERE email = 'buck@rippin.co'
+
+---
+
++-------------------------------------------------------------------------------------+
+|                                     QUERY PLAN                                      |
++-------------------------------------------------------------------------------------+
+| Index Scan using users_email_idx on public.users  (cost=0.42..8.44 rows=1 width=67) |
+|   Output: id, name, email, age, created_at, updated_at                              |
+|   Index Cond: ((users.email)::text = 'buck@rippin.co'::text)                        |
++-------------------------------------------------------------------------------------+
+```
+
+---
+
+## ANALYZE
+
+```
+EXPLAIN ANALYZE VERBOSE SELECT *
+FROM users
+WHERE email = 'buck@rippin.co'
+```
+
+---
+
+## ANALYZE
+
+```
++-------------------------------------------------------------------------------------------------------------------------------+
+|                                                          QUERY PLAN                                                           |
++-------------------------------------------------------------------------------------------------------------------------------+
+| Index Scan using users_email_idx on public.users  (cost=0.42..8.44 rows=1 width=67) (actual time=0.071..0.071 rows=1 loops=1) |
+|   Output: id, name, email, age, created_at, updated_at                                                                        |
+|   Index Cond: ((users.email)::text = 'buck@rippin.co'::text)                                                                  |
+| Planning time: 0.145 ms                                                                                                       |
+| Execution time: 0.106 ms                                                                                                      |
++-------------------------------------------------------------------------------------------------------------------------------+
+```
+
+---
+
+![fit](images/index_all.jpg)
+
+---
+
+## Drawbacks of Indicies
+
+- Have to be maintained as table changes
+- Take up disk space
+- Lose their efficiency if they get too big
+- Can hurt performance on write-heavy tables
+
+---
+
+## N + 1 Queries
+
+```
+users = User.all
+
+users.each do |user|
+  user.pets.each do |pet|
+    puts pet.name
+  end
+end
+```
+
+---
+
+## N + 1 Queries
+
+```
+User Load (0.7ms)  SELECT "users".* FROM "users"
+
+Pet Load (0.4ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 1]]
+Pet Load (0.5ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 2]]
+Pet Load (0.3ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 3]]
+Pet Load (0.5ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 4]]
+Pet Load (0.4ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 5]]
+Pet Load (0.3ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 6]]
+Pet Load (0.2ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 7]]
+Pet Load (0.3ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 8]]
+Pet Load (0.2ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 9]]
+Pet Load (0.2ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 10]]
+Pet Load (0.2ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 11]]
+Pet Load (0.3ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 12]]
+Pet Load (0.2ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 13]]
+Pet Load (0.2ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id" = $1  [["user_id", 14]]
+
+Completed 200 OK in 290ms (Views: 266.7ms | ActiveRecord: 15.5ms)
+
+```
+
+---
+
+## Fixing N + 1 Queries
+
+```
+User.all => User.all.includes(:pets)
+
+---
+
+User Load (0.6ms)  SELECT "users".* FROM "users"
+
+Pet Load (1.2ms)  SELECT "pets".* FROM "pets" WHERE "pets"."user_id"
+    IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)
+
+Completed 200 OK in 43ms (Views: 32.6ms | ActiveRecord: 8.4ms)
+```
+
+---
+
+### Some Final Tips For Running queries...
+
+## "Drag from the bottom up"
+
+---
+
+![fit](images/open_query.png)
+
+---
+
+![fit](images/guarded_query.png)
+
+---
+
+![fit](images/drag_from_top_miss.png)
+
+---
+
+![fit](images/drag_from_top_halfway.png)
+
+---
+
+![fit](images/drag_from_bottom_error.png)
+
+---
+
+![fit](images/good.png)
+
+---
+
+# Questions?
+
+---
+
+# Thanks!
+
+## @johnmosesman
