@@ -77,8 +77,6 @@ _tables, rows, columns_
 
 ## "People and their pets"
 
-_naive implementation_
-
 ```
 +-------------+------------+--------------+--------------+----------+----------+----------+
 | person_name | person_age |  work_place  |  work_phone  | pet_name | pet_type | pet_legs |
@@ -92,8 +90,6 @@ _naive implementation_
 ---
 
 ## Adding a pet
-
-_Add a row?_
 
 ```
 +-------------+------------+--------------+--------------+----------+----------+----------+
@@ -109,8 +105,6 @@ _Add a row?_
 ---
 
 ## Adding a pet
-
-_Add columns?_
 
 ```
 +-------------+------------+--------------+--------------+-----------+-----------+-----------+-----------+-----------+-----------+
@@ -186,21 +180,6 @@ pets
 | John        | Ruby     | Dog      |        4 |
 | Susan       | Pete     | Bird     |        2 |
 | Jim         | Fluffy   | Cat      |        4 |
-+-------------+----------+----------+----------+
-```
-
----
-
-## 1st Normal Form
-
-```
-+-------------+----------+----------+----------+
-| person_name | pet_name | pet_type | pet_legs |
-+-------------+----------+----------+----------+
-| John        | Ruby     | Dog      |        4 |
-| Susan       | Pete     | Bird     |        2 |
-| Jim         | Fluffy   | Cat      |        4 |
-| John        | Buddy    | Dog      |        4 |
 +-------------+----------+----------+----------+
 ```
 
@@ -330,6 +309,7 @@ pets
 _Primary key_ - one or more columns that uniquely identifies each row
 
 ```
+people
 +----+-------------+------------+
 | id | person_name | person_age |
 +----+-------------+------------+
@@ -338,6 +318,7 @@ _Primary key_ - one or more columns that uniquely identifies each row
 |  3 | Jim         |         30 |
 +----+-------------+------------+
 
+pets
 +----+-----------+----------+----------+
 | id | person_id | pet_name | pet_type |
 +----+-----------+----------+----------+
@@ -355,6 +336,7 @@ _Primary key_ - one or more columns that uniquely identifies each row
 _Foreign key_ - a reference to a primary key in another table
 
 ```
+people
 +------------------+-------------+------------+
 | id (PK)          | person_name | person_age |
 +------------------+-------------+------------+
@@ -363,6 +345,7 @@ _Foreign key_ - a reference to a primary key in another table
 |                3 | Jim         |         30 |
 +------------------+-------------+------------+
 
+pets
 +------------------+-------------------------+----------+----------+
 | id (PK)          | person_id (FK)          | pet_name | pet_type |
 +------------------+-------------------------+----------+----------+
@@ -897,16 +880,16 @@ FROM people
 
 ---
 
+## OUTER JOIN[^4]
+
+![inline fit](images/left_join.png) ![inline fit](images/right_join.png)
+
+---
+
 ## Join Types[^4]
 
 ![inline fit](images/full_join.png) ![inline fit](images/left_join.png)
 ![inline fit](images/inner_join.png) ![inline fit](images/right_join.png)
-
----
-
-## OUTER JOIN[^4]
-
-![inline fit](images/left_join.png) ![inline fit](images/right_join.png)
 
 ---
 
@@ -1293,6 +1276,17 @@ SELECT *
 FROM people
   JOIN pets ON pets.person_id = people.id
 GROUP BY people.id
+```
+
+---
+
+## Group by person
+
+```
+SELECT *
+FROM people
+  JOIN pets ON pets.person_id = people.id
+GROUP BY people.id
 
 ---
 
@@ -1400,6 +1394,19 @@ FROM people
 GROUP BY people.id, people.name
 HAVING num_pets >= 2
 ORDER BY num_pets DESC
+```
+
+---
+
+## HAVING
+
+```
+SELECT people.id, people.name, COUNT(pets.id) AS num_pets
+FROM people
+  JOIN pets ON pets.person_id = people.id
+GROUP BY people.id, people.name
+HAVING num_pets >= 2
+ORDER BY num_pets DESC
 
 ---
 
@@ -1475,6 +1482,22 @@ LIMIT 5
 ### FEATURE REQUEST
 
 ## "Pets can belong to more than one owner."
+
+---
+
+## Has And Belongs To Many (HABTM)
+
+```
+CREATE TABLE people (
+  id SERIAL PRIMARY KEY,
+  ...
+);
+
+CREATE TABLE pets (
+  id SERIAL PRIMARY KEY,
+  ...
+)
+```
 
 ---
 
@@ -1568,6 +1591,10 @@ WHERE pets.id = 1
 
 - Corrupted data is useless
 - It makes application development more difficult
+
+---
+
+## Constraints
 
 ---
 
@@ -1841,6 +1868,10 @@ WHERE email = 'buck@rippin.co'
 - Take up disk space
 - Lose their efficiency if they get too big
 - Can hurt performance on write-heavy tables
+
+---
+
+## N + 1 Queries
 
 ---
 
